@@ -69,6 +69,7 @@ target_link_libraries(Looper
         hardware_pwm
         pico_stdlib
         pico_cyw43_arch_none
+        pico_multicore
         )
 
 pico_add_extra_outputs(Looper)

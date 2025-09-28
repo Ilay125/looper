@@ -1,6 +1,7 @@
 #include "recorder.h"
 #include "constants.h"
 #include <stdio.h>
+#include "constants.h"
 
 Recorder::Recorder() {
     this->is_rec = false;
@@ -12,29 +13,31 @@ Recorder::Recorder() {
 
 void Recorder::add_key(int key, absolute_time_t now) {
     uint64_t diff = absolute_time_diff_us(this->time_last_event, now);
-    diff -= KEY_TIME * 1000; // time in us
+    //diff -= KEY_TIME * 1000; // time in us
     printf("diff=%llu\n", diff);
+
     this->time_rec.push_back(diff);
     this->key_rec.push_back(key);
     this->time_last_event = now;
 }
 
 
-int Recorder::play(Buzzer& buzz, Button& play) {
-    for (int i = 0; i < key_rec.size(); i++) {
-        if (play.is_pressed()) {
-            return 1;
+void Recorder::play(int key_amps[], Button& play) {
+    while(!play.is_pressed()) {
+        for (int i = 0; i < key_rec.size(); i++) {
+            if (play.is_pressed()) {
+                return;
+            }
+
+            uint64_t delay = this->time_rec.at(i);
+            sleep_us(delay);
+            
+            int key = this->key_rec.at(i);
+            key_amps[key] = MAX_INTENSITY_SOUND;
         }
-
-        uint64_t delay = this->time_rec.at(i);
-        sleep_us(delay);
-        
-        int key = this->key_rec.at(i);
-        buzz.play_tone(TONES[key], KEY_TIME);
     }
-
-    return 0;
-}
+    }
+    
 
 void Recorder::clear() {
     this->time_last_event = get_absolute_time();

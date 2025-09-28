@@ -14,7 +14,9 @@
 #define B6_PIN 9
 #define C7_PIN 8
 
-#define KEY_TIME 500 // ms
+#define KEY_TIME 1 // ms
+#define MAX_INTENSITY_SOUND 5000;
+#define SOUND_DECAY_FACTOR 1.01;
 
 #define REC_BTN_PIN 2
 #define REC_LED_PIN 3

@@ -17,7 +17,7 @@ class Recorder {
     public:
         Recorder();
         void add_key(int key, absolute_time_t now);
-        int play(Buzzer& buzz, Button& play);
+        void play(int key_amps[], Button& play);
         void clear();
 
         void set_rec(bool state);

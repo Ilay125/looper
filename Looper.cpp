@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include <vector>
+#include "pico/multicore.h"
 
 #include "constants.h"
 #include "wrap/buzzer.h"
@@ -9,25 +10,43 @@
 #include "wrap/led.h"
 #include "recorder.h"
 
+int key_amp[OCTAVE_SIZE] = { 0 };
+
+void speaker() {
+    
+    Buzzer buzzer(BUZZER_PIN);
+
+    for (int t : TONES) {
+        buzzer.play_tone(t, 200);
+    }
+
+    int sum_weight_freq = 0;
+    int sum_amps = 0;
+
+    while(1) {
+        for (int i = 0; i < OCTAVE_SIZE; i++) {
+            if (key_amp[i] > 0) {
+                sum_weight_freq += key_amp[i] * TONES[i];
+                sum_amps += key_amp[i];
+                key_amp[i] /= SOUND_DECAY_FACTOR;
+                printf("key amp=%d", key_amp[i]);
+            }
+        }
+
+        buzzer.play_tone(sum_weight_freq / sum_amps, KEY_TIME);
+        sum_weight_freq = 0;
+        sum_amps = 0;
+    }
+}
                    
 int main()
 {
     stdio_init_all();
 
-    Buzzer buzzer(BUZZER_PIN);
+    multicore_launch_core1(speaker);
+
+    
     Debug debug;
-    
-    
-    // Checking buzzer
-    printf("buzzing");
-    debug.set(1);
-
-    for (int t : TONES) {
-        buzzer.play_tone(t, 200);
-    }
-    debug.set(0);
-
-    printf("buzzed");
 
     Button keys_btns[] = {Button(C6_PIN),
                     Button(D6_PIN),
@@ -60,7 +79,7 @@ int main()
                         rec.add_key(i, get_absolute_time());
                     }
                 
-                    buzzer.play_tone(TONES[i], KEY_TIME);
+                    key_amp[i] = MAX_INTENSITY_SOUND;
                 }
             }
 
@@ -82,7 +101,7 @@ int main()
             rec.set_play(true);
             play_led.set(true);
             
-            rec.play(buzzer, play_btn);
+            rec.play(key_amp, play_btn);
 
             rec.set_play(false);
             play_led.set(false);
